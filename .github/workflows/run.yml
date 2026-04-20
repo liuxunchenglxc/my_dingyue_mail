@@ -1,0 +1,24 @@
+name: Subscribe Fetcher
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 22 * * 5' 
+
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: |
+          python main.py \
+            --token "${{ secrets.AUTH_TOKEN }}" \
+            --user "${{ secrets.MAIL_USER }}" \
+            --passwd "${{ secrets.MAIL_PASS }}" \
+            --addr "${{ secrets.STMP_ADDR }}" \
+            --port "${{ secrets.STMP_PORT }}" \
+            --from-name "${{ secrets.MAIL_FROM_NAME }}" \
+            --to-user "${{ secrets.MAIL_TO_USER }}"
