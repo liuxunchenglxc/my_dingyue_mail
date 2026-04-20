@@ -8,7 +8,7 @@ from email.header import Header
 import random
 
 def get_subscribe_url(auth_token):
-    url = "https://feiniaoyun.xyz"
+    url = "https://feiniaoyun.xyz/api/v1/user/getSubscribe"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
         "authorization": auth_token,
