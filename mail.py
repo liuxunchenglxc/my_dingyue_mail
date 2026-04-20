@@ -32,21 +32,42 @@ def get_subscribe_url(auth_token):
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=15) as response:
-            # 获取压缩格式
-            encoding = response.info().get('Content-Encoding')
+            status_code = response.getcode()
+            resp_headers = response.info()
+            encoding = resp_headers.get('Content-Encoding')
+            print(f"[*] 响应状态码: {status_code}")
+            print(f"[*] 响应编码格式: {encoding}")
+            
             raw_data = response.read()
+            print(f"[*] 读取到的原始字节数: {len(raw_data)}")
             
             # 处理解压缩逻辑
+            content = ""
             if encoding == 'gzip':
-                content = gzip.decompress(raw_data).decode('utf-8')
+                try:
+                    content = gzip.decompress(raw_data).decode('utf-8')
+                    print("[+] Gzip 解压成功")
+                except Exception as ge:
+                    print(f"[-] Gzip 解压失败: {ge}")
             elif encoding == 'deflate':
-                import zlib
-                content = zlib.decompress(raw_data).decode('utf-8')
+                try:
+                    content = zlib.decompress(raw_data).decode('utf-8')
+                    print("[+] Deflate 解压成功")
+                except Exception as de:
+                    print(f"[-] Deflate 解压失败: {de}")
             else:
-                content = raw_data.decode('utf-8')
+                content = raw_data.decode('utf-8', errors='ignore')
+                print("[!] 未检测到已知压缩格式，尝试直接解码")
             
+            print(f"[*] 返回内容预览 (前500字):\n{content[:500]}")
+            
+            if not content.strip():
+                return "服务器返回内容为空喵", False
+
+            # 4. 解析 JSON
             res_data = json.loads(content)
-            return res_data.get("data", {}).get("subscribe_url"), True
+            sub_url = res_data.get("data", {}).get("subscribe_url")
+            return sub_url, True
             
     except Exception as e:
         if hasattr(e, 'read'):
