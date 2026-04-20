@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: |
-          python main.py \
+          python mail.py \
             --token "${{ secrets.AUTH_TOKEN }}" \
             --user "${{ secrets.MAIL_USER }}" \
             --passwd "${{ secrets.MAIL_PASS }}" \
