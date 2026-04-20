@@ -7,22 +7,55 @@ from email.mime.text import MIMEText
 from email.header import Header
 import random
 
+import gzip
+import io
+
 def get_subscribe_url(auth_token):
     url = "https://feiniaoyun.xyz/api/v1/user/getSubscribe"
+    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+        "Accept": "*/*",
+        "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+        "Accept-Encoding": "gzip, deflate",
+        "Referer": "https://feiniaoyun.xyz/",
         "authorization": auth_token,
-        "Referer": "https://feiniaoyun.xyz",
+        "Content-Language": "zh-CN",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
     }
     
     req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req) as response:
-            res_data = json.loads(response.read().decode())
+        with urllib.request.urlopen(req, timeout=15) as response:
+            # 获取压缩格式
+            encoding = response.info().get('Content-Encoding')
+            raw_data = response.read()
+            
+            # 处理解压缩逻辑
+            if encoding == 'gzip':
+                content = gzip.decompress(raw_data).decode('utf-8')
+            elif encoding == 'deflate':
+                import zlib
+                content = zlib.decompress(raw_data).decode('utf-8')
+            else:
+                content = raw_data.decode('utf-8')
+            
+            res_data = json.loads(content)
             return res_data.get("data", {}).get("subscribe_url"), True
+            
     except Exception as e:
-        print(f"API请求异常: {e}")
-        return f"{e}", False
+        if hasattr(e, 'read'):
+            try:
+                err_body = e.read().decode()
+                return f"HTTP错误喵: {e.code} - {err_body}", False
+            except:
+                pass
+        return f"请求异常喵: {str(e)}", False
 
 def send_email(sub_url, status, args):
     prefix = random.choice(["呜喵！", "主人主人！", "喵呜~", "报告主人！"])
