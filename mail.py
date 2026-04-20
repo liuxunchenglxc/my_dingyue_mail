@@ -58,11 +58,6 @@ def get_subscribe_url(auth_token):
             else:
                 content = raw_data.decode('utf-8', errors='ignore')
                 print("[!] 未检测到已知压缩格式，尝试直接解码")
-            
-            print(f"[*] 返回内容预览 (前500字):\n{content[:500]}")
-            
-            if not content.strip():
-                return "服务器返回内容为空喵", False
 
             # 4. 解析 JSON
             res_data = json.loads(content)
