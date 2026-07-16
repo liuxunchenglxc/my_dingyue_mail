@@ -1,4 +1,3 @@
-import sys
 import argparse
 import json
 import urllib.request
@@ -8,7 +7,9 @@ from email.header import Header
 import random
 
 import gzip
-import io
+import os
+
+import hashlib
 
 def get_subscribe_url(auth_token):
     url = "https://feiniaoyun.xyz/api/v1/user/getSubscribe"
@@ -109,6 +110,19 @@ def send_email(sub_url, status, args):
     except Exception as e:
         print(f"[-] 邮件发送失败: {e}")
 
+def is_repeat_url(sub_url, status):
+    if status:
+        string_hash = hashlib.sha256(sub_url.encode()).hexdigest()
+        if os.path.exists("fnyhash.txt"):
+            with open("fnyhash.txt", "r", encoding="utf-8") as f:
+                old_hash = f.read()
+            if old_hash == string_hash:
+                return True
+        with open("fnyhash.txt", "w", encoding="utf-8") as f:
+            f.write(string_hash)
+    return False
+            
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="飞鸟云订阅获取脚本")
     parser.add_argument("--token", required=True, help="Auth Token")
@@ -122,4 +136,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     url, status = get_subscribe_url(args.token)
-    send_email(url, status, args)
+    if not is_repeat_url(url, status):
+        send_email(url, status, args)

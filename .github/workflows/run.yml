@@ -2,17 +2,25 @@ name: Subscribe Fetcher
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 22 * * 5' 
 
 jobs:
   run-task:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      
+      - uses: actions/cache/restore@v6
+        id: cache
+        with:
+          path: fnyhash.txt
+          key: fnyhash-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            fnyhash-
+
       - run: |
           python mail.py \
             --token "${{ secrets.AUTH_TOKEN }}" \
@@ -22,3 +30,9 @@ jobs:
             --port "${{ secrets.STMP_PORT }}" \
             --from-name "${{ secrets.MAIL_FROM_NAME }}" \
             --to-user "${{ secrets.MAIL_TO_USER }}"
+      
+      - name: Save Updated Value
+        uses: actions/cache/save@v6
+        with:
+          path: fnyhash.txt
+          key: fnyhash-${{ github.run_id }}-${{ github.run_attempt }}
