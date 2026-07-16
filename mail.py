@@ -137,4 +137,7 @@ if __name__ == "__main__":
 
     url, status = get_subscribe_url(args.token)
     if not is_repeat_url(url, status):
+        print("[+] 检测到为全新URL。")
         send_email(url, status, args)
+    else:
+        print("[=] 检测到为重复URL。")
